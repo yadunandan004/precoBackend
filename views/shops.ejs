@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-beta1/jquery.js"></script>
+    <script src="/socket.io/socket.io.js" ></script>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <h4 id="details"></h4>
+<button id="sender" value="click me">Click me</button>
+<button id="addshp" value="click me">shop add</button>
+<button id="sendOrder" value="click me">new order</button>
+    <div id="map"></div>
+    <script>
+    var socket=io();
+    socket.on('mark_res',function(data){
+      console.log(data);
+    });
+    socket.on('request',function(data){
+      console.log(data);
+      socket.emit('join','MCVmys887');
+       socket.on('new_order',function(data){
+      console.log(data);
+      
+      });
+    });
+    $('#addshp').click(function(){
+      $.post("/shops/addshop",{
+        name:'printq',
+        city:'Bangalore',
+        email:'printq@gmail.com',
+        lat:12.910953,
+        lng:77.626569,
+        pass:'q123',
+        phone:'9911451112',
+        fare:1
+      });
+    });
+    
+    
+    $('#sendOrder').click(function(){
+        var srcarr=[{path:'printage/uploads/yadunandan4992@gmail.com/pic1.jpg',copies:1,option:'B/W'},
+        {path:'printage/uploads/yadunandan4992@gmail.com/pic4.jpg',copies:2,option:'B/W'},
+        {path:'printage/uploads/yadunandan4992@gmail.com/pic2.jpg',copies:3,option:'COL'}];
+        $.post("/orders/neworder",{
+            shopid:'priBan112',
+            user:'yadunandan4992@gmail.com',
+            src:JSON.stringify(srcarr)
+        },function(data){
+            console.log(data);
+        });
+    });
+    var map;
+     var myLatLng = {};
+    var socket=io();
+    socket.on('connect',(data)=>{
+       socket.emit('new_user','yadunandan4992@gmail.com');
+       });
+       socket.on('ordrSts',function(data){
+         alert(data.status+'  '+data.time);
+       });
+    socket.emit('reply',"something something");
+      socket.on('mypnt',function(data){
+         //document.getElementById("sdata").innerHTML=data.lng;
+         myLatLng.lat=data.lat;
+         myLatLng.lng=data.lng;
+         map = new google.maps.Map(document.getElementById('map'), {
+              center: myLatLng,
+              zoom: 17
+            });
+           var marker = new google.maps.Marker({
+              position: myLatLng,
+              map: map,
+              title: 'Hello World!'
+            });
+            google.maps.event.addListener(map,'click',function(event) {
+              placeMarker(event.latLng,map);
+              socket.emit('marker',event.latLng);
+            });
+         
+        });
+        
+    function placeMarker(position, map) {
+    var marker = new google.maps.Marker({
+      position: position,
+      map: map
+    });  
+    map.panTo(position);
+  }
+  socket.on('user_status',function(data){
+      if(data.logged==1)
+      {
+        document.getElementById("status").innerHTML="Logged in";
+      }
+      else if(data.logged==0)
+      {
+        document.getElementById("status").innerHTML="couldnt Logged in";
+      }
+  });
+    </script>
+    <script type="text/javascript">
+
+
+
+    </script>
+     <script async defer
+      src="https://maps.googleapis.com/maps/api/js">
+    </script>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/socket.io/socket.io.js" ></script>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <form method="post" action="/prints/addpage" enctype="multipart/form-data">
+    <input type="text" name="user">
+    <input type="file" name="docs" multiple>
+    <input type="submit" id="btn" value="Submit">
+</form>
+<script>
+  var socket=io();
+  socket.on('test_msg',function(data){
+    console.log(data);
+  });
+</script>
+  </body>
+</html>

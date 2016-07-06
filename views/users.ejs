@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-beta1/jquery.js"></script>
+    <script src="/socket.io/socket.io.js" ></script>
+    
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p id="msg">Welcome to <%= title %></p>
+    <button id="sender">Clicker</button>
+    
+    <script>
+      var socket=io();
+
+       /*socket.on('connect',function(){
+        socket.emit('join','SBTgul156');
+       });
+       socket.on('new_order',function(data){
+      document.getElementById("msg").innerHTML=data.toString();
+      });
+   */
+    
+    
+    $('#sender').click(function(){
+        $.post("http://print-yadunandan004.c9users.io:8080/users/readuser",{
+            email:'yadunandan4992@gmail.com',
+            pass:'vanrg141263'
+        },function(data){
+            console.log(data);
+        });
+    });
+    </script>
+  </body>
+</html>
