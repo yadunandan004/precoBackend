@@ -109,7 +109,10 @@ slots.protoype.sessionStart=function (order)
     //this.sendAuth((data)=>{
     //});
     //maintain a session of a user within printer
-    printer(order);
+    if(/print/i.test(order.type))
+    {
+        printer(order);
+    }
     (function(order){
         setTimeout((order)=>{
            this.sessionEnd(order); 
