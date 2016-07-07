@@ -1,9 +1,11 @@
 'use strict';
+const preco=require("./printer");
+const printer=require("../routes/orders").printer;
 function slots()
 {
     this.pbslots={};
 }
-slots.prototype.addSlot=function(user,shop,dur,type,strt,fn)
+slots.prototype.addSlot=function(user,shop,dur,type,strt,fils,fn)
 {
    //creating a queue
     //var recnt
@@ -25,7 +27,8 @@ slots.prototype.addSlot=function(user,shop,dur,type,strt,fn)
         start:strt,
         duration:dur,
         shop:shop,
-        type:type
+        type:type,
+        src:fils
     };
     this.pbslots[shop].push(slot);
     this.Timer(slot);
@@ -106,6 +109,7 @@ slots.protoype.sessionStart=function (order)
     //this.sendAuth((data)=>{
     //});
     //maintain a session of a user within printer
+    printer(order);
     (function(order){
         setTimeout((order)=>{
            this.sessionEnd(order); 
@@ -122,4 +126,26 @@ slots.prototype.sendAuth=function (info,fun)
 {
     fun(1);
 }
+
+
+
+/*function checkSlot(shop,id)
+{
+
+    if(pbslots[shop].length==0)
+    {
+        return 0;
+    }
+    else
+    {
+        if(pbslots[shop].recent==pbslots[shop][id].start)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}*/
 module.exports=new slots();

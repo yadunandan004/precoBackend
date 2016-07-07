@@ -32,6 +32,7 @@ io.on('connection',function(socket)
          users[data]=socket;
     });
 });
+
 router.post('/neworder',function(req,res){
     var prnt=req.body;
     var user=prnt.user;
@@ -60,7 +61,7 @@ router.post('/neworder',function(req,res){
             {
                 console.log(JSON.stringify(result));
                 var id=result._id;
-                  slots.addSlot(prnt.user,prnt.shopid,prnt.dur,prnt.type,prnt.start,(data)=>{
+                  slots.addSlot(prnt.user,prnt.shopid,prnt.dur,prnt.type,prnt.start,obj,(data)=>{
                       var resp={id:id,wait:data};
                         res.json(resp);
                   });
@@ -78,13 +79,12 @@ router.post('/neworder',function(req,res){
             }
             else
             {
-                  slots.addSlot(prnt.user,prnt.shopid,prnt.dur,prnt.type,prnt.start,(data)=>{
+                  slots.addSlot(prnt.user,prnt.shopid,prnt.dur,prnt.type,prnt.start,obj,(data)=>{
                         res.json(result);
                   });
             }   
              });
     }
-
 });
 
 router.post('/addpage',function(req,res){
@@ -130,7 +130,6 @@ router.post('/updateStatus',function(req,res){
         }
     });
 });
-
 router.post('/allorders',function(req,res){
     var query={};
     query["user"]=req.body.user;
@@ -149,23 +148,7 @@ var getPrinters=function(){
 }
 //getPrinters();
 
-var print=function(printerId,Content,fn){
-    var params = {
-	title: 'Print job title',
-	content: Content,
-	content_type: 'url', //optional, default = url 
-	printer_id: printerId,
-	//tags: ['tag1', 'tag2'],//optional, default = [], 
-	setting: {
-		
- 
-	}
-};
-preeco.print(params,function(err, response){
-    fn(JSON.stringify(response));
-    console.log(response.toString());
-});
-}
+
 //print('c576943e-1d99-db08-7a25-391f97668c24','https://upload.wikimedia.org/wikipedia/commons/a/a7/Lorem_Ipsum_Arial.png',function(data)
 //{
 //    console.log(data);
@@ -215,50 +198,21 @@ router.post('/execorder',function(req, res) {
         }
     });
 });
-/*function checkSlot(shop,id)
+
+
+function printer(prnt)
 {
-
-    if(pbslots[shop].length==0)
-    {
-        return 0;
-    }
-    else
-    {
-        if(pbslots[shop].recent==pbslots[shop][id].start)
+    var user=prnt.user;
+    var obj=prnt.src;
+        if(/pb_/i.test(prnt.shop))
         {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-}*/
-
-
-
-
-
-
-function printer(prnt,ordr,user,fare,obj)
-{
-        if(/pb_/i.test(prnt.shopid))
-        {
-        preeco.getPrinter(prnt.shopid, function(err, response){
+        preeco.getPrinter(prnt.shop, function(err, response){
             console.log(response);
-            ordr.save(function(err,result){
-            if(err)
-            {
-                console.log(err);
-            }
-            else
-            {
-               print(prnt.shopid,obj,(data)=>{
+               preeco.printing(prnt.shop,obj,(data)=>{
                    //res.json(data);
-                   shop.findOne({shopid:prnt.shopid},(res)=>{
-                       fare=JSON.parse(res).fare;
+                   shop.findOne({shopid:prnt.shop},(res)=>{
+                       let fare=JSON.parse(res).fare;
                        var cost=data.NumOfPages*fare;
-                       
                         userschm.find({email:user},function(err,result){
                             if(err)
                             {
@@ -274,18 +228,16 @@ function printer(prnt,ordr,user,fare,obj)
                    });
                    //users[prnt.user].emit('finished',data);
                });
-            }
-            });
         })
     }
     else
     {
-        if(typeof(shops[prnt.shopid])=="undefined")
+        if(typeof(shops[prnt.shop])=="undefined")
         {
             return 0;
         }
         else{
-           shops[prnt.shopid].emit('new_order',prnt);
+           shops[prnt.shop].emit('new_order',prnt);
            return prnt;
         }
     }
@@ -303,4 +255,5 @@ function copier()
     
 }
 module.exports.routes=router;
+module.exports.printer=printer;
 module.exports.getslots=slots.getSlots;

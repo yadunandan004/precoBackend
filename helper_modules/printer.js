@@ -21,5 +21,23 @@ var cloud_print = new CloudPrint(
             refresh_token: REFRESH_TOKEN
         }
     });
+cloud_print.printing=function(printerId,Content,fn){
+    var params = {
+	title: 'Print job title',
+	content: Content,
+	content_type: 'url', //optional, default = url 
+	printer_id: printerId,
+	//tags: ['tag1', 'tag2'],//optional, default = [], 
+	setting: {
+		
+ 
+	}
+};
+this.print(params,function(err, response){
+    fn(JSON.stringify(response));
+    console.log(response.toString());
+});
+}
+
     
 module.exports=cloud_print;
