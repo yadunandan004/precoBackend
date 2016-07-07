@@ -1,0 +1,25 @@
+'use strict';
+const CloudPrint = require('cloud-print');
+const google = require('googleapis');
+const request = require('request');
+const OAuth2 = google.auth.OAuth2;
+const CLIENT_ID='27252076393-mib8gcku331a6lm4o7ba2qn99co06o8h.apps.googleusercontent.com';
+const CLIENT_SECRET='aneK1__RTJqAIrO-RnGiUzMf';
+const REDIRECT_URL='http://pre-ecobackend-yadunandan004.c9users.io:8080/orders';
+const CODE='4/4J7xkJVpzGjaD67zgI6lKTp_xf9zEsWSLl51LuFE6D8';
+const ACCESS_TOKEN='ya29.CizYAlvu2paOGJ4hzt0fvkaBnzOEXmMfcJ0SJtyqcqJnEzX83daFcmj-sYW9Sg';
+const REFRESH_TOKEN='1/dgzm-flddGGuK7lytr5hzQbQ3P37fWc9f_0gO-dHgfU';
+
+var cloud_print = new CloudPrint(
+    {
+        service_provider: 'google',
+        auth: {
+            client_id: CLIENT_ID,
+            client_secret: CLIENT_SECRET,
+            redirect_uri: REDIRECT_URL,
+            access_token: ACCESS_TOKEN,
+            refresh_token: REFRESH_TOKEN
+        }
+    });
+    
+module.exports=cloud_print;
