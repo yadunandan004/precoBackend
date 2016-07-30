@@ -154,23 +154,26 @@ router.post('/addpage',upload.array('docs'),function(req,res){
 });
 
 router.post('/fare',function(req,res){
+ // console.log(JSON.stringify(req.body));
   var files=JSON.parse(req.body.docs).files;
   var user=req.body.user;
   var shopfare=req.body.fare;
-  //var shopid=req.body.shopid;
+  var shopid=req.body.shopid;
+  console.log(shopid);
   var total=0;
   var upfiles=0;
-  //var slotstkn=slots(shopid);
+  var slotstkn=slots(shopid);
+  //console.log(slotstkn);
   for(var i=0;i<files.length;i++)
   {
     console.log('copies: '+files[i].copies);
     detect_pages(files[i].name,user,function(data){
       upfiles++;
       total=total+data*files[i].copies;
-      //console.log('total: '+total+'total files: '+files.length+'current file: '+i);
+      console.log('total: '+total+'total files: '+files.length+'current file: '+i);
       if(upfiles==files.length)
       {
-        res.json(total*shopfare);
+        res.json({fare:total*shopfare,slots:slotstkn});
         console.log('fare: '+total*shopfare);
       }
     });

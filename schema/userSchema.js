@@ -2,6 +2,8 @@ var mongoose=require('mongoose');
 var Schema=mongoose.Schema;
 
 var userSchema=new Schema({
+    profileId:{type:String},
+    profilePic:{type:String},
     name:{type:String,required:true},
     college:{type:String},
     email:{type:String,required:true,unique:true},

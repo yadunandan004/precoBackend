@@ -5,12 +5,12 @@ var io=require('../socket');
 var printOrder=require('../schema/printorderSchema');
 var shop=require('../schema/shopSchema');
 var userschm=require('../schema/userSchema');
-var preeco=require("../helper_modules/printer");
-var slots=require("../helper_modules/slots");
+const preeco=require("../helper_modules/printer");
+var slts=require("../helper_modules/slots");
 var shops=[];
 var users=[];
-
-
+//console.log(slots.prototype.constructor);
+var slots=new slts();
 io.on('connection',function(socket)
 {
       console.log('socket established to '+socket.id);
@@ -37,53 +37,83 @@ router.post('/neworder',function(req,res){
     var prnt=req.body;
     var user=prnt.user;
     var fare;
-    //console.log(obj[0].path);
+    //var time=new Date(prnt.start);
+    
+    //console.log(time.getHours()+':'+time.getMinutes());
+    let time=new Date();
+    let st=prnt.start.split('\:');
+    
+    if(/am/i.test(st[5]))
+    {
+        time.setHours(parseInt(st[3]));
+    }
+    else
+    {
+        time.setHours(parseInt(st[3])+12);
+    }
+    time.setDate(parseInt(st[0]));
+    time.setMonth(parseInt(st[1]));
+    time.setFullYear(parseInt(st[2]));
+    time.setMinutes(parseInt(st[4]));
+    time.setSeconds(0);
+    time.setMilliseconds(0);   
+    let duration=parseInt(prnt.dur);
     var ordr=printOrder({
         shopid:prnt.shopid,
         user:prnt.user,
         type:prnt.type,
-        start:prnt.start,
-        duration:prnt.dur
+        start:time,
+        duration:duration
     });
     if(/print/i.test(prnt.type))
     {
        if(typeof(prnt.src)!='undefined')
         {
+             //console.log("prnt "+JSON.stringify(prnt));
              var obj=JSON.parse(prnt.src);
               ordr.src=obj;
-              ordr.save(function(err,result){
-            if(err)
-            {
-                console.log(err);
-                res.json(-1);
-            }
-            else
-            {
-                console.log(JSON.stringify(result));
-                var id=result._id;
-                  slots.addSlot(prnt.user,prnt.shopid,prnt.dur,prnt.type,prnt.start,obj,(data)=>{
-                      var resp={id:id,wait:data};
-                        res.json(resp);
+                  slots.addSlot(prnt.user,prnt.shopid,duration,prnt.type,time,obj,(data)=>{
+                      if(data==0)
+                      {
+                        res.json({status:data,reason:'cannot book slot'});  
+                      }
+                      else
+                      {
+                            ordr.save(function(err,result){
+                                if(err)
+                                {
+                                    console.log(err);
+                                    res.json({status:0,reason:'couldn\'t save order'});
+                                }
+                                else
+                                {
+                                    console.log(data);
+                                    res.json({status:1,data:data});
+                                }
+                            });
+                      }
                   });
-            }   
-             });
+        }
+        else
+        {
+            res.json({status:-1,reason:'print source files not present'});
         }
     }
     else 
     {
-        ordr.save(function(err,result){
-            if(err)
-            {
-                console.log(err);
-                res.json(-1);
-            }
-            else
-            {
-                  slots.addSlot(prnt.user,prnt.shopid,prnt.dur,prnt.type,prnt.start,obj,(data)=>{
-                        res.json(result);
-                  });
-            }   
-             });
+      slots.addSlot(prnt.user,prnt.shopid,prnt.dur,prnt.type,time,obj,(data)=>{
+           ordr.save(function(err,result){
+                if(err)
+                {
+                    console.log(err);
+                    res.json({status:0,reason:'couldn\'t save order'});
+                }
+                else
+                {
+                    res.json(result);
+                }   
+            });
+      });
     }
 });
 
@@ -204,31 +234,26 @@ function printer(prnt)
 {
     var user=prnt.user;
     var obj=prnt.src;
+    var cost;
         if(/pb_/i.test(prnt.shop))
         {
-        preeco.getPrinter(prnt.shop, function(err, response){
-            console.log(response);
-               preeco.printing(prnt.shop,obj,(data)=>{
-                   //res.json(data);
-                   shop.findOne({shopid:prnt.shop},(res)=>{
-                       let fare=JSON.parse(res).fare;
-                       var cost=data.NumOfPages*fare;
-                        userschm.find({email:user},function(err,result){
-                            if(err)
-                            {
-                                console.log(err);
-                            }
-                            else{
-                                var wlt=JSON.parse(result).wallet-cost;
+                getPrinter(prnt).then((response)=>{
+                    preeco.printing(prnt.shop,obj);
+                }).then((data)=>{
+                    //printer response
+                    getFare(prnt.shop);
+                }).then((data)=>{
+                    cost=data;
+                    getUser(user);
+                }).then((data)=>{
+                    var wlt=JSON.parse(data).wallet-cost;
                                 userschm.update({email:user},{wallet:wlt},function(user) {
                                    return user; 
                                 });
-                            }
-                        });
-                   });
-                   //users[prnt.user].emit('finished',data);
-               });
-        })
+                }).catch((err)=>{
+                    console.log(err);
+                    return err;
+                })    
     }
     else
     {
@@ -254,6 +279,57 @@ function copier()
   
     
 }
+
+function getPrinter(prnt)
+{
+    return new Promise(resolve,reject)
+    {
+        preeco.getPrinter(prnt.shop, function(err, response){
+            if(!err)
+            {
+                console.log(response);
+                resolve(response);
+            }
+            else
+            {
+                reject(err);
+            }
+        });
+    }
+    
+}
+
+function getFare(shop)
+{
+     return new Promise(resolve,reject)
+     {
+        shop.findOne({shopid:prnt.shop},(res)=>{
+                       let fare=JSON.parse(res).fare;
+                       var cost=data.NumOfPages*fare;
+                       resolve(cost);
+        }); 
+     }
+}
+
+function getUser(user)
+{
+     userschm.find({email:user},function(err,result){
+                            if(err)
+                            {
+                                console.log(err);
+                                reject(err);
+                            }
+                            else
+                            {
+                                resolve(result);
+                            }
+});
+}
+function getSlots(shop)
+{
+    return slots.getSlots(shop);
+}
+//console.log(slots.getSlots("pb_van769"));
 module.exports.routes=router;
 module.exports.printer=printer;
-module.exports.getslots=slots.getSlots;
+module.exports.getslots=getSlots;

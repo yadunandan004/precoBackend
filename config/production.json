@@ -1,0 +1,9 @@
+{
+    "dbURL":"mongodb://localhost:27017/printdb",
+    "sessionSecret":"printing app",
+    "fb":{
+        "appID":"1735412753396040",
+        "appSecret":"28048ae1540dbe968a921136e7ed6479",
+        "callbackURL":"http://pre-ecobackend-yadunandan004.c9users.io:8080/auth/facebook/callback"
+    }
+}
